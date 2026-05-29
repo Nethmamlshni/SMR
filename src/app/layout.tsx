@@ -6,9 +6,13 @@ export const metadata: Metadata = {
   title: "SMR Consolidated",
   description: "Premium coconut factory production management system",
   manifest: "/manifest.json",
+
   icons: {
-    icon: "/Screenshot_2026-05-29_at_11.10.23-removebg-preview.png",
-  }
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
+  },
+
+  themeColor: "#4A2C1D",
 };
 
 export const viewport: Viewport = {
