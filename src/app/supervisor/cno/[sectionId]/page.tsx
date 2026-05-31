@@ -74,7 +74,7 @@ function SectionWorkflow() {
   const [saving, setSaving] = useState(false);
 
   const [supervisorName, setSupervisorName] = useState(""); 
-  const [shift, setShift] = useState<"Day" | "Night">("Day");
+  const [shift, setShift] = useState<"Day" | "Night" | "">("");
 
   // CONFIRM POPUP STATES
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -515,31 +515,25 @@ async function submitAll() {
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-coconut-leaf">
-              Shift
-            </label>
+<div>
+  <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-coconut-leaf">
+    Shift
+  </label>
 
-            <Select
-              value={shift}
-              onChange={(e) =>
-                setShift(
-                  e.target
-                    .value as
-                    | "Day"
-                    | "Night"
-                )
-              }
-            >
-              <option value="Day">
-                Day Shift
-              </option>
+  <Select
+    value={shift}
+    onChange={(e) =>
+      setShift(e.target.value as "Day" | "Night")
+    }
+  >
+    <option value="" disabled>
+      Select a shift
+    </option>
 
-              <option value="Night">
-                Night Shift
-              </option>
-            </Select>
-          </div>
+    <option value="Day">Day Shift</option>
+    <option value="Night">Night Shift</option>
+  </Select>
+</div>
         </div>
 
         {/* SUMMARY */}
@@ -665,7 +659,8 @@ async function submitAll() {
             onClick={submitAll}
             disabled={
               saving ||
-              !supervisorName
+              !supervisorName ||
+              !shift 
             }
           >
             {saving
@@ -749,10 +744,7 @@ function CageModal({
     initial?.rawWeight || 0
   );
 
-  const [coconutType, setCoconutType] =
-    useState<CoconutType>(
-      initial?.coconutType || "Red"
-    );
+const [coconutType, setCoconutType] = useState<CoconutType | "">("");
 
   const [cageName, setCageName] = useState(
   initial?.cageName || ""
@@ -769,7 +761,7 @@ const [anotherCageName, setAnotherCageName] =
 
   const finalWeight = calculateFinalWeight(
     rawWeight,
-    coconutType
+    coconutType || "Red"
   );
 
   function toggle(value: number) {
@@ -786,7 +778,7 @@ const [anotherCageName, setAnotherCageName] =
       cageNumber,
       selectedCages: selected,
       rawWeight,
-      coconutType,
+      coconutType: coconutType || "Red",
       cageButtonsCount: buttonCount,
       cageName,
       anotherCageName,
@@ -878,23 +870,23 @@ const [anotherCageName, setAnotherCageName] =
           </div>
 
           <div>
-            <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-coconut-leaf">
-              Coconut Type
-            </label>
+  <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-coconut-leaf">
+    Coconut Type
+  </label>
 
-            <Select
-              value={coconutType}
-              onChange={(e) =>
-                setCoconutType(
-                  e.target.value as CoconutType
-                )
-              }
-            >
-              <option value="Red">Red</option>
-              <option value="Black">Black</option>
-              <option value="Small">Small</option>
-            </Select>
-          </div>
+  <Select
+    value={coconutType}
+    onChange={(e) => setCoconutType(e.target.value as CoconutType)}
+  >
+    <option value="" disabled>
+      Select a type
+    </option>
+
+    <option value="Red">Red</option>
+    <option value="Black">Black</option>
+    <option value="Small">Small</option>
+  </Select>
+</div>
 
           <div className="rounded-2xl bg-coconut-cream/80 p-4">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-coconut-leaf">
@@ -902,7 +894,7 @@ const [anotherCageName, setAnotherCageName] =
             </p>
 
             <p className="mt-2 text-2xl font-black">
-              {getDeduction(coconutType)} kg
+              {getDeduction(coconutType || "Red")} kg
             </p>
           </div>
 
