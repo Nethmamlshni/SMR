@@ -781,7 +781,6 @@ const [anotherCageName, setAnotherCageName] =
   }
 
   function save() {
-    if (!rawWeight) return;
 
     onSave({
       cageNumber,
@@ -922,7 +921,6 @@ const [anotherCageName, setAnotherCageName] =
         <Button
           className="mt-6 w-full"
           size="lg"
-          disabled={!rawWeight}
           onClick={save}
         >
           Save Cage Draft
