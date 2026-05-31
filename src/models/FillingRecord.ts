@@ -31,7 +31,7 @@ export interface IFillingRecord {
 
   supervisorName: string;
 
-  shift: "day" | "night";
+  shift: "Day" | "Night";
 
   cageName: string;
 
@@ -50,6 +50,7 @@ const FillingRecordSchema = new Schema<IFillingRecord>(
       type: Schema.Types.ObjectId,
       ref: "Section",
       required: true,
+      index: true,
     },
 
     sectionName: {
@@ -67,6 +68,7 @@ const FillingRecordSchema = new Schema<IFillingRecord>(
     cageNumber: {
       type: Number,
       required: true,
+      index: true,
     },
 
     selectedCages: [
@@ -121,37 +123,44 @@ const FillingRecordSchema = new Schema<IFillingRecord>(
       type: String,
       required: true,
     },
+
     shift: {
       type: String,
-      enum: ["day", "night"],
+      enum: ["Day", "Night"],
       required: true,
     },
+
     cageName: {
       type: String,
+      default: "",
     },
+
     anotherCageName: {
       type: String,
-    }
+      default: "",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-FillingRecordSchema.index(
-  {
-    date: 1,
-    sectionId: 1,
-    fillingType: 1,
-    cageNumber: 1,
-  },
-  {
-    unique: true,
-  }
-);
+/*
+  IMPORTANT:
+
+  Removed unique index because:
+  Same date + section + cage may have
+  multiple Additional Filling records.
+
+  If you keep the unique index,
+  MongoDB will reject duplicates.
+*/
 
 const FillingRecord: Model<IFillingRecord> =
   models.FillingRecord ||
-  model<IFillingRecord>("FillingRecord", FillingRecordSchema);
+  model<IFillingRecord>(
+    "FillingRecord",
+    FillingRecordSchema
+  );
 
 export default FillingRecord;
