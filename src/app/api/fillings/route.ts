@@ -6,22 +6,35 @@ import Section from "@/models/Section";
 import FillingRecord from "@/models/FillingRecord";
 
 export async function GET(request: NextRequest) {
-  const { error } = await requireAuth(request, ["admin", "supervisor"]);
+  const { error } = await requireAuth(
+    request,
+    ["admin", "supervisor"]
+  );
+
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
+
   const date = searchParams.get("date");
   const sectionId = searchParams.get("sectionId");
-  const fillingType = searchParams.get("fillingType");
 
   const query: any = {};
+
   if (date) query.date = date;
   if (sectionId) query.sectionId = sectionId;
-  if (fillingType) query.fillingType = fillingType;
 
   await connectDB();
-  const records = await FillingRecord.find(query).sort({ date: -1, sectionName: 1, cageNumber: 1 }).lean();
-  return NextResponse.json({ records });
+
+  const records = await FillingRecord.find(query)
+    .sort({
+      cageNumber: 1,
+      createdAt: 1,
+    })
+    .lean();
+
+  return NextResponse.json({
+    records,
+  });
 }
 
 export async function POST(request: NextRequest) {

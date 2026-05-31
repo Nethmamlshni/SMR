@@ -170,270 +170,536 @@ export async function GET(request: NextRequest) {
       ? "Next Day Filling"
       : "Additional Filling";
   }
+// =========================================
+// SMR HEADER
+// =========================================
 
-  // =========================================
-  // DAY / NIGHT TABLE
-  // =========================================
+sheet.mergeCells("A1:K2");
 
-  function addMainTable(
-    title: string,
-    shift: string
-  ) {
-    const data = records.filter(
-      (r: any) =>
-        r.shift?.toLowerCase() ===
-        shift.toLowerCase()
-    );
+const companyTitle = sheet.getCell("A1");
 
-    // TITLE
-    const titleRow = sheet.addRow([title]);
+companyTitle.value =
+  "SMR CONSOLIDATED\nCOCONUT COUNTING MANAGEMENT SYSTEM";
 
-    sheet.mergeCells(
-      `A${titleRow.number}:I${titleRow.number}`
-    );
+companyTitle.font = {
+  bold: true,
+  size: 22,
+  color: { argb: "FFFFFFFF" },
+};
 
-    const titleCell = titleRow.getCell(1);
+companyTitle.alignment = {
+  horizontal: "center",
+  vertical: "middle",
+  wrapText: true,
+};
 
-    titleCell.font = titleStyle.font;
+companyTitle.fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: {
+    argb: "FF3E2723", // coconut brown
+  },
+};
 
-    titleCell.fill = titleStyle.fill;
+sheet.getRow(1).height = 35;
+sheet.getRow(2).height = 35;
 
-    titleCell.alignment =
-      titleStyle.alignment;
+// =========================================
+// REPORT DATE
+// =========================================
 
-    titleRow.height = 28;
+sheet.mergeCells("A4:K4");
 
-    // SPACE
-    sheet.addRow([]);
+const reportDate = sheet.getCell("A4");
 
-    // HEADERS
-    const headerRow = sheet.addRow([
-      "Date",
-      "Section",
-      "Filling Type",
-      "Cage No",
-      "Selected Buttons",
-      "Raw Weight",
-      "Type",
-      "Final Weight",
-      "Coconut Count",
-    ]);
+reportDate.value = `Production Report - ${date}`;
 
-    styleHeader(headerRow.number);
+reportDate.font = {
+  bold: true,
+  size: 14,
+  color: { argb: "FF1B5E20" },
+};
 
-    // DATA
-    data.forEach((record: any) => {
-      const row = sheet.addRow([
-        record.date,
-        record.sectionName,
-        getFillingType(record.fillingType),
-        record.cageNumber,
-        (record.selectedCages || []).join(
-          ", "
-        ),
-        record.rawWeight,
-        record.coconutType,
-        record.finalWeight,
-        record.coconutCount,
-      ]);
+reportDate.alignment = {
+  horizontal: "center",
+};
 
-      styleDataRow(row);
-    });
+sheet.getRow(4).height = 22;
 
-    // TOTALS
-    const totalRawWeight = data.reduce(
-      (sum: number, r: any) =>
-        sum + Number(r.rawWeight || 0),
-      0
-    );
 
-    const totalFinalWeight = data.reduce(
-      (sum: number, r: any) =>
-        sum + Number(r.finalWeight || 0),
-      0
-    );
+  
+// =========================================
+// TABLE 01+
+// DYNAMIC SECTION FULL DETAILS
+// =========================================
 
-    const totalCoconutCount = data.reduce(
-      (sum: number, r: any) =>
-        sum + Number(r.coconutCount || 0),
-      0
-    );
+const sectionGroups = new Map();
 
-    const totalRow = sheet.addRow([
-      "",
-      "",
-      "",
-      "",
-      "TOTAL",
-      totalRawWeight,
-      "",
-      totalFinalWeight,
-      totalCoconutCount,
-    ]);
+records.forEach((record: any) => {
+  const section =
+    record.sectionName || "Unknown";
 
-    styleTotalRow(totalRow);
-
-    // SPACING
-    sheet.addRow([]);
-    sheet.addRow([]);
+  if (!sectionGroups.has(section)) {
+    sectionGroups.set(section, []);
   }
 
-  // =========================================
-  // DAY TABLE
-  // =========================================
+  sectionGroups
+    .get(section)
+    .push(record);
+});
 
-  addMainTable(
-    "DAY SHIFT PRODUCTION REPORT",
-    "Day"
-  );
+let tableNo = 1;
 
-  // =========================================
-  // NIGHT TABLE
-  // =========================================
+for (const [
+  sectionName,
+  sectionRecords,
+] of sectionGroups.entries()) {
+  // TITLE
 
-  addMainTable(
-    "NIGHT SHIFT PRODUCTION REPORT",
-    "Night"
-  );
-
-  // =========================================
-  // CAGE SUMMARY TABLE
-  // =========================================
-
-  const summaryTitleRow = sheet.addRow([
-    "CAGE NAME SUMMARY",
+  const titleRow = sheet.addRow([
+    `TABLE ${tableNo} - ${String(
+      sectionName
+    ).toUpperCase()} FULL DETAILS`,
   ]);
 
   sheet.mergeCells(
-    `A${summaryTitleRow.number}:D${summaryTitleRow.number}`
+    `A${titleRow.number}:K${titleRow.number}`
   );
 
-  const summaryTitleCell =
-    summaryTitleRow.getCell(1);
+  const titleCell =
+    titleRow.getCell(1);
 
-  summaryTitleCell.font = titleStyle.font;
+  titleCell.font = {
+    bold: true,
+    size: 16,
+    color: {
+      argb: "FFFFFFFF",
+    },
+  };
 
-  summaryTitleCell.fill = titleStyle.fill;
+  titleCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: {
+      argb: "FF1565C0",
+    },
+  };
 
-  summaryTitleCell.alignment =
-    titleStyle.alignment;
+  titleCell.alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
 
-  summaryTitleRow.height = 28;
+  titleRow.height = 25;
 
   sheet.addRow([]);
 
   // HEADERS
-  const summaryHeader = sheet.addRow([
-    "Another Cage Name",
-    "Cage Names",
-    "Total Coconut Count",
-    "Total Records",
-  ]);
 
-  styleHeader(summaryHeader.number);
+  const headerRow =
+    sheet.addRow([
+      "Date",
+      "Shift",
+      "Filling Type",
+      "Cage No",
+      "Cage Name",
+      "Another Cage Name",
+      "Coconut Type",
+      "Raw Weight",
+      "Final Weight",
+      "Coconut Count",
+      "Supervisor Name",
+    ]);
 
-  // =========================================
-  // GROUP DATA
-  // =========================================
+  styleHeader(headerRow.number);
 
-  const groupedMap = new Map();
+  // DATA
 
-  records.forEach((record: any) => {
-    const anotherName =
-      record.anotherCageName?.trim() || "-";
+  sectionRecords.forEach(
+    (record: any) => {
+      const row =
+        sheet.addRow([
+          record.date,
 
-    const cageName =
-      record.cageName?.trim() || "-";
+          record.shift
+            ?.toUpperCase(),
 
-    if (!groupedMap.has(anotherName)) {
-      groupedMap.set(anotherName, {
-        anotherCageName: anotherName,
-        cageNames: new Set(),
-        coconutCount: 0,
-        totalRecords: 0,
-      });
-    }
+          record.fillingType ===
+          "next-day"
+            ? "Next Day Filling"
+            : "Additional Filling",
 
-    const existing = groupedMap.get(
-      anotherName
-    );
+          record.cageNumber,
 
-    // UNIQUE CAGE NAMES
-    existing.cageNames.add(cageName);
+          record.cageName ||
+            "-",
 
-    existing.coconutCount += Number(
-      record.coconutCount || 0
-    );
+          record.anotherCageName ||
+            "-",
 
-    existing.totalRecords += 1;
-  });
+          record.coconutType,
 
-  // =========================================
-  // ADD SUMMARY ROWS
-  // =========================================
+          record.rawWeight,
 
-  Array.from(groupedMap.values()).forEach(
-    (item: any) => {
-      const row = sheet.addRow([
-        item.anotherCageName,
+          record.finalWeight,
 
-        Array.from(item.cageNames).join(
-          ", "
-        ),
+          record.coconutCount,
 
-        item.coconutCount,
-
-        item.totalRecords,
-      ]);
+          record.supervisorName,
+        ]);
 
       styleDataRow(row);
     }
   );
 
-  // =========================================
-  // GRAND TOTAL
-  // =========================================
+  // TOTALS
 
-  const grandTotal = Array.from(
-    groupedMap.values()
-  ).reduce(
-    (sum: number, item: any) =>
-      sum + item.coconutCount,
-    0
-  );
+  const totalRawWeight =
+    sectionRecords.reduce(
+      (
+        sum: number,
+        r: any
+      ) =>
+        sum +
+        Number(
+          r.rawWeight || 0
+        ),
+      0
+    );
 
-  const grandTotalRecords = Array.from(
-    groupedMap.values()
-  ).reduce(
-    (sum: number, item: any) =>
-      sum + item.totalRecords,
-    0
-  );
+  const totalFinalWeight =
+    sectionRecords.reduce(
+      (
+        sum: number,
+        r: any
+      ) =>
+        sum +
+        Number(
+          r.finalWeight || 0
+        ),
+      0
+    );
 
-  const grandTotalRow = sheet.addRow([
-    "",
-    "GRAND TOTAL",
-    grandTotal,
-    grandTotalRecords,
+  const totalCoconutCount =
+    sectionRecords.reduce(
+      (
+        sum: number,
+        r: any
+      ) =>
+        sum +
+        Number(
+          r.coconutCount || 0
+        ),
+      0
+    );
+
+  const totalRow =
+    sheet.addRow([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      totalRawWeight,
+      totalFinalWeight,
+      totalCoconutCount,
+      "",
+    ]);
+
+  totalRow.getCell(7).value =
+    "TOTAL";
+
+  styleTotalRow(totalRow);
+
+  sheet.addRow([]);
+  sheet.addRow([]);
+
+  tableNo++;
+}
+
+// =========================================
+// TABLE 02 - ANOTHER CAGE SUMMARY
+// =========================================
+
+const anotherTitleRow = sheet.addRow([
+  "TABLE " + tableNo + " - ANOTHER CAGE SUMMARY",
+]);
+
+sheet.mergeCells(
+  `A${anotherTitleRow.number}:D${anotherTitleRow.number}`
+);
+
+const anotherTitleCell =
+  anotherTitleRow.getCell(1);
+
+anotherTitleCell.font = {
+  bold: true,
+  size: 16,
+  color: { argb: "FFFFFFFF" },
+};
+
+anotherTitleCell.fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF8E24AA" },
+};
+
+anotherTitleCell.alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+sheet.addRow([]);
+
+// =========================================
+// HEADERS
+// =========================================
+
+const anotherHeader =
+  sheet.addRow([
+    "Another Cage Name",
+    "Cage Names",
+    "Cage Count",
+    "Total Coconut Count",
   ]);
 
-  styleTotalRow(grandTotalRow);
+styleHeader(
+  anotherHeader.number
+);
 
-  // =========================================
-  // GLOBAL STYLING
-  // =========================================
+// =========================================
+// GROUP DATA
+// =========================================
 
-  sheet.eachRow((row) => {
-    row.height = 22;
-  });
+const anotherMap = new Map();
 
-  // FREEZE TOP
-  sheet.views = [
-    {
-      state: "frozen",
-      ySplit: 1,
-    },
-  ];
+records.forEach((record: any) => {
+  const anotherName =
+    record.anotherCageName?.trim() ||
+    "-";
+
+  const cageName =
+    record.cageName?.trim() || "-";
+
+  if (!anotherMap.has(anotherName)) {
+    anotherMap.set(anotherName, {
+      anotherCageName:
+        anotherName,
+      cageNames: new Set(),
+      totalCoconutCount: 0,
+    });
+  }
+
+  const item =
+    anotherMap.get(
+      anotherName
+    );
+
+  item.cageNames.add(
+    cageName
+  );
+
+  item.totalCoconutCount +=
+    Number(
+      record.coconutCount || 0
+    );
+});
+
+// =========================================
+// DISPLAY ROWS
+// =========================================
+
+Array.from(
+  anotherMap.values()
+).forEach((item: any) => {
+  const row =
+    sheet.addRow([
+      item.anotherCageName,
+
+      Array.from(
+        item.cageNames
+      ).join(", "),
+
+      item.cageNames.size,
+
+      item.totalCoconutCount,
+    ]);
+
+  styleDataRow(row);
+});
+
+// =========================================
+// GRAND TOTAL
+// =========================================
+
+const grandTotal =
+  Array.from(
+    anotherMap.values()
+  ).reduce(
+    (
+      sum: number,
+      item: any
+    ) =>
+      sum +
+      item.totalCoconutCount,
+    0
+  );
+
+const totalRow =
+  sheet.addRow([
+    "",
+    "GRAND TOTAL",
+    "",
+    grandTotal,
+  ]);
+
+styleTotalRow(totalRow);
+
+sheet.addRow([]);
+sheet.addRow([]);
+
+tableNo++;
+
+// =========================================
+// TABLE 03 - CAGE NAME SUMMARY
+// =========================================
+
+const cageTitleRow = sheet.addRow([
+  "TABLE " + tableNo + " - CAGE NAME SUMMARY",
+]);
+
+sheet.mergeCells(
+  `A${cageTitleRow.number}:C${cageTitleRow.number}`
+);
+
+const cageTitleCell =
+  cageTitleRow.getCell(1);
+
+cageTitleCell.font = {
+  bold: true,
+  size: 16,
+  color: { argb: "FFFFFFFF" },
+};
+
+cageTitleCell.fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF00897B" },
+};
+
+cageTitleCell.alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+sheet.addRow([]);
+
+// =========================================
+// HEADERS
+// =========================================
+
+const cageHeader = sheet.addRow([
+  "Cage Name",
+  "Cage No",
+  "Total Coconut Count",
+]);
+
+styleHeader(cageHeader.number);
+
+// =========================================
+// GROUP DATA
+// =========================================
+
+const cageMap = new Map();
+
+records.forEach((record: any) => {
+  const cageName =
+    record.cageName?.trim() || "-";
+
+  if (!cageMap.has(cageName)) {
+    cageMap.set(cageName, {
+      cageName,
+      cageNumbers: new Set(),
+      totalCoconutCount: 0,
+    });
+  }
+
+  const item =
+    cageMap.get(cageName);
+
+  item.cageNumbers.add(
+    record.cageNumber
+  );
+
+  item.totalCoconutCount +=
+    Number(
+      record.coconutCount || 0
+    );
+});
+
+// =========================================
+// DISPLAY ROWS
+// =========================================
+
+Array.from(
+  cageMap.values()
+)
+.sort((a: any, b: any) =>
+  a.cageName.localeCompare(
+    b.cageName
+  )
+)
+.forEach((item: any) => {
+  const row = sheet.addRow([
+    item.cageName,
+
+    Array.from(
+      item.cageNumbers
+    )
+      .sort((a: any, b: any) => a - b)
+      .join(", "),
+
+    item.totalCoconutCount,
+  ]);
+
+  styleDataRow(row);
+});
+
+// =========================================
+// GRAND TOTAL
+// =========================================
+
+const cageGrandTotal =
+  Array.from(
+    cageMap.values()
+  ).reduce(
+    (
+      sum: number,
+      item: any
+    ) =>
+      sum +
+      item.totalCoconutCount,
+    0
+  );
+
+const cageTotalRow =
+  sheet.addRow([
+    "",
+    "GRAND TOTAL",
+    cageGrandTotal,
+  ]);
+
+styleTotalRow(
+  cageTotalRow
+);
+
+sheet.addRow([]);
+sheet.addRow([]);
+
+tableNo++;
+
 
   // =========================================
   // EXPORT FILE
@@ -449,4 +715,4 @@ export async function GET(request: NextRequest) {
       "Content-Disposition": `attachment; filename="creative-production-report-${date}.xlsx"`,
     },
   });
-}
+} 
