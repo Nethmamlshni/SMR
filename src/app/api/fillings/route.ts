@@ -93,6 +93,6 @@ const {
     }
   }));
 
-  await FillingRecord.bulkWrite(operations);
+  await FillingRecord.insertMany(docs);
   return NextResponse.json({ ok: true, saved: docs.length });
 }
